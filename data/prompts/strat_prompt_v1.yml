@@ -1,0 +1,98 @@
+User_Context:
+  Stock_Data:
+    General:
+      Beta: {Market_Beta}
+      Classification: {classification}
+
+    Last_Weeks_Price:
+      Close: "{Close}"
+      Volume: "{Volume}"
+
+    Weekly_Past_Returns: "{Weekly_Past_Returns}"
+
+    Historical_Volatility:
+      HV_Close: "{HV_Close}"
+
+    Implied_Volatility:
+      IV_Close: "{IV_Close}"
+
+  Fundamental_Data:
+    Ratios:
+      Current_Ratio: "{Current_Ratio}"
+      Quick_Ratio: "{Quick_Ratio}"
+      Debt_to_Equity_Ratio: "{Debt_to_Equity_Ratio}"
+      PE_Ratio: "{PE_Ratio}"
+    Margins:
+      Gross_Margin: "{Gross_Margin}"
+      Operating_Margin: "{Operating_Margin}"
+      Net_Profit_Margin: "{Net_Profit_Margin}"
+    Growth Metrics:
+      EPS_YoY: "{EPS_YoY_Growth}"
+      Net_Income_YoY: "{Net_Income_YoY_Growth}"
+      Free_Cash_Flow_YoY: "{Free_Cash_Flow_Per_Share_YoY_Growth}"
+
+  Technical_Analysis:
+    Moving_Averages:
+      20MA: "{20MA}"
+      50MA: "{50MA}"
+      200MA: "{200MA}"
+    MACD:
+      Value: "{MACD}"
+      Signal_Line: "{Signal_Line}"
+      MACD_Strength: {MACD_Strength}
+    RSI:
+      Value: "{RSI}"
+    ATR: "{ATR}"
+
+  Macro_Data:
+    Macro_Indices:
+      SPX:
+        Close: "{SPX_Close}"
+        Close_20MA: "{SPX_Close_MA}"
+        Close_Slope: "{SPX_Close_Slope}"
+      VIX:
+        Close: "{VIX_Close}"
+        Close_20MA: "{VIX_Close_MA}"
+        Close_Slope: "{VIX_Close_Slope}"
+    Economic_Data:
+      GDP_QoQ: "{GDP_QoQ}"
+      PMI: "{PMI}"
+      Consumer_Confidence_QoQ: "{Consumer_Confidence_QoQ}"
+      M2_Money_Supply_QoQ: "{M2_Money_Supply_QoQ}"
+      PPI_YoY: "{PPI_YoY}"
+      Treasury_Yields_YoY: "{Treasury_Yields_YoY}"
+
+  Options_Data:
+    Put_IV_Skews:
+      OTM_Skew: "{OTM_Skew}"
+      ATM_Skew: "{ATM_Skew}"
+      ITM_Skew: "{ITM_Skew}"
+    20Day_Moving_Averages:
+      OTM_Skew_MA: "{MA_OTM_Skew}"
+      ATM_Skew_MA: "{MA_ATM_Skew}"
+      ITM_Skew_MA: "{MA_ITM_Skew}"
+
+System_Context:
+  persona: {persona}
+  risk_profile: {risk_profile}
+  portfolio_objectives: {portfolio_objectives}
+  instructions: |
+    Develop a trading strategy for the next month based on the given context and aligned with the specified `portfolio_objectives` and `risk_profile`. Use the following process:
+
+    - Stock Data: Examine price trends, volume, and HV/IV metrics for momentum or risk signals.
+    - Fundamental Data: Focus on profitability margins and ratios based on risk tolerance.
+    - Technical Analysis: Use RSI for overbought/oversold conditions, MAs for trend confirmation, and MACD for momentum analysis.
+    - Macro Data: Evaluate GDP, PMI, and VIX trends to assess broader sentiment.
+    - Options Data: Prioritize implied volatility metrics to capture sentiment shifts.
+    - Dynamic Feature Weighting by Risk Profile:
+    - High-Risk Profile:
+      - Prioritize volatility and momentum indicators such as RSI, MACD, ATR, and Options_Data.ATM_IV.Call.
+      - Weigh macroeconomic indicators (e.g., VIX, GDP_QoQ) for risk-on sentiment.
+    - Low-Risk Profile:
+      - Focus on stability metrics like Debt-to-Equity Ratio, Operating Margin, and Current Ratio.
+      - Analyze implied volatility skews (Options_Data.ITM_Skew) for downside risk mitigation.
+      - Use macroeconomic stability indicators such as Consumer Confidence QoQ and Treasury Yields.
+
+  Output:
+    action: str. LONG or SHORT.
+    explanation: String. A clear, concise rationale (max 350 words) including the top 5 weighted features with the news as a factor used in decision-making (ICL Example; "Stock_Data.Price.Close, Weight 3, Technical_Analysis.RSI.Value, Weight 1, Options_Data.ATM_IV.Call, Weight 2"), and if `news_factors` was provided, the top 3 ranked news factors, weighted the same using the Likert scale (ICL Example; "Earning Call next month, with positive analyst expectations, Weight 3.").

@@ -1,0 +1,171 @@
+User_Context:
+  Last_Strategy_Used_Data:
+    last_returns: "{Last_LLM_Strat_Returns}"
+    last_action: "{Last_LLM_Strat_Action}"
+    Rationale: |
+       """{Last_LLM_Strat}"""
+
+
+  Stock_Data:
+    General:
+      Beta: {Market_Beta}
+      Classification: {classification}
+
+    Last_Weeks_Price:
+      Close: "{Close}"
+      Volume: "{Volume}"
+
+    Weekly_Past_Returns: "{Weekly_Past_Returns}"
+
+    Historical_Volatility:
+      HV_Close: "{HV_Close}"
+
+    Implied_Volatility:
+      IV_Close: "{IV_Close}"
+
+  Fundamental_Data:
+    Ratios:
+      Current_Ratio: "{Current_Ratio}"
+      Quick_Ratio: "{Quick_Ratio}"
+      Debt_to_Equity_Ratio: "{Debt_to_Equity_Ratio}"
+      PE_Ratio: "{PE_Ratio}"
+    Margins:
+      Gross_Margin: "{Gross_Margin}"
+      Operating_Margin: "{Operating_Margin}"
+      Net_Profit_Margin: "{Net_Profit_Margin}"
+    Growth Metrics:
+      EPS_YoY: "{EPS_YoY_Growth}"
+      Net_Income_YoY: "{Net_Income_YoY_Growth}"
+      Free_Cash_Flow_YoY: "{Free_Cash_Flow_Per_Share_YoY_Growth}"
+
+  Technical_Analysis:
+    Moving_Averages:
+        20MA: "{20MA}"
+        50MA: "{50MA}"
+        200MA: "{200MA}"
+    MA_Slopes:
+        20MA_Slope: "{20MA_Slope}"
+        50MA_Slope: "{50MA_Slope}"
+        100MA_Slope: "{100MA_Slope}"
+        200MA_Slope: "{200MA_Slope}"
+    MACD:
+        Value: "{MACD}"
+        Signal_Line: "{Signal_Line}"
+        MACD_Strength: {MACD_Strength}
+    RSI:
+        Value: "{RSI}"
+    ATR: "{ATR}"
+
+  Macro_Data:
+    Macro_Indices:
+      SPX:
+        Close: "{SPX_Close}"
+        Close_20MA: "{SPX_Close_MA}"
+        Close_Slope: "{SPX_Close_Slope}"
+      VIX:
+        Close: "{VIX_Close}"
+        Close_20MA: "{VIX_Close_MA}"
+        Close_Slope: "{VIX_Close_Slope}"
+    Economic_Data:
+      GDP_QoQ: "{GDP_QoQ}"
+      PMI: "{PMI}"
+      Consumer_Confidence_QoQ: "{Consumer_Confidence_QoQ}"
+      M2_Money_Supply_QoQ: "{M2_Money_Supply_QoQ}"
+      PPI_YoY: "{PPI_YoY}"
+      Treasury_Yields_YoY: "{Treasury_Yields_YoY}"
+
+  Options_Data:
+    Put_IV_Skews:
+      OTM_Skew: "{OTM_Skew}"
+      ATM_Skew: "{ATM_Skew}"
+      ITM_Skew: "{ITM_Skew}"
+    20Day_Moving_Averages:
+      OTM_Skew_MA: "{MA_OTM_Skew}"
+      ATM_Skew_MA: "{MA_ATM_Skew}"
+      ITM_Skew_MA: "{MA_ITM_Skew}"
+
+  News_Sentiment: {news_sentiment}
+  News_Impact_Score: {news_impact_score}
+
+System_Context(System):
+  Persona: {persona}
+  Portfolio_Objectives: {portfolio_objectives}
+  Instructions: |
+    Develop a LONG or SHORT trading strategy for a single stock only for the next Month that aligns with the `portfolio_objectives`. Follow these guidelines:
+
+    1. Stock Analysis:
+       - Evaluate price trends: Compare the Close price against 20MA, 50MA, and 200MA to assess momentum or reversals.
+       - Analyze returns: Use Weekly Past Returns to validate trend sustainability.
+       - Contextualize volatility: Align `HV_Close` and `HV_High` with recent price action for trend validation.
+       - Incorporate beta: Use `beta` to gauge sensitivity to market movements.
+
+       - ICL Example: "Close price above 20MA and 50MA with steep 20MA slope signals bullish momentum. Weekly returns confirm a sustainable uptrend."
+
+    2. Technical Analysis:
+       - Use RSI: Identify momentum signals (>70 overbought; <30 oversold) and divergences for reversals.
+       - Validate with `MACD`: Use crossovers of `MACD.Value` and `Signal_Line`, and `MACD_Strength` for directional confidence.
+       - Leverage `RSI.value` divergences, and steep `Moving_Averages` slopes. Or focus on stable `Moving_Averages` patterns on stable historical volatilty `HV_Close`.
+       - ICL Example: "RSI at 65, a positive MACD crossover indicate bullish momentum."
+
+    3. Fundamental Analysis:
+       - Evaluate growth metrics: Use `EPS_YoY`, `Net_Income_YoY`, and `Free_Cash_Flow_YoY`for profitability and sustainability.
+       - Prioritize ratios: Low `Debt_to_Equity_Ratio` and `Current_Ratio` reflect financial stability.
+       - Focus on aggressive `Growth Metrics` and earnings news.
+       - ICL Example: "EPS YoY growth of 25% and low Debt-to-Equity ratio of 0.5 support strong financial health, aligning with a LONG strategy."
+
+    4. Macro Analysis:
+      - Align with market sentiment across `Macro_Data`:
+        - "SPX_Close_Slope > 0 && VIX_Close_Slope < 0": Bullish (Risk-On)
+        - "SPX_Close_Slope < 0 && VIX_Close_Slope > 0": Bearish (Risk-Off)
+      - Validate with `Economic_Data`:
+        - "GDP_QoQ > 0 && `PMI` > 50" leads to Economic Expansion
+        - "`Treasury_Yields_YoY` < 0" Signals Recession Risk, especially if already mentioned in `Rationale`.
+
+      - ICL Examples:
+        - "`SPX_Close_Slope` > 0 && `VIX_Close_Slope` < 0 We have Market Confidence"
+        - "`GDP_QoQ` Falling && `PMI` < 50 We have an Economic Slowdown."
+
+    5. Options Analysis:
+      - Compare `OTM_Skew`, `ATM_Skew`, and `ITM_Skew` IV Skews: Assess differences to gauge market sentiment and directional bias using their `20Day_Moving_Averages`.
+      - Leverage IV spikes to capitalize on speculative directional trades.
+      - Example: "Rising `ATM_Skew_MA` > 0, market pricing up move, with stable HV supports a LONG position, as it indicates growing upside expectations without excessive fear."
+
+    6. News Analysis:
+      - Use `News_Sentiment` and `News_Impact_Score` (1–3).
+      - Only strong directional news (score = 3) should override other signals.
+      - Medium news (score = 2) supports but does nost lead.
+      - Always check if news contradicts macro or technical trend.
+
+    7. Performance Reflection and Strategic Adaptation:
+      - If `Last_Strategy_Used_Data` is available:
+            - Assess the outcome of the previous strategy by examining `last_returns` and the chosen `last_action`.
+            - Determine if the result aligns with the expectations outlined in the previous `Rationale`.
+            - Identify if the direction (LONG or SHORT) led to desirable or undesirable outcomes.
+            - You must NOT reuse or copy the previous `Rationale`. It is only context for reflection.
+            - Summarize in 1–2 sentences whether the previous strategy performed as expected.
+            - Example: "The previous LONG strategy yielded positive returns, confirming the bullish setup based on RSI and moving averages."
+            - Do NOT include language or phrasing from the previous rationale.
+      - Confidence assignment:
+          - Assign a Likert score (1 to 3) to your  `action_confidence`:
+              - 1: Low confidence; contradictory or weak alignment across features.
+              - 2: Moderate confidence; partial alignment with moderate evidence.
+              - 3: High confidence; strong convergence across key features.
+      - Feature Attribution:
+          - Rank the importance of each major feature used in your current rationale using a Likert scale (1 to 3):
+              - 1: Minimal contribution; not required for the decision.
+              - 2: Moderate contribution; relevant but not critical.
+              - 3: High contribution; pivotal to the trading decision.
+
+Output:
+  action: Str. LONG or SHORT.
+  action_confidence: int. Likert scale (1-3) confidence in the proposed `action`, adjusted based on prior strategy outcome if `Last_Strategy_Used_Data` is available.
+  explanation: >
+    A concise rationale (max 350 words) justifying the proposed `action`.
+    Include:
+      - The top 5 weighted features used in the decision, each labeled with its Likert importance (1–3).
+        (e.g., "Stock_Data.Price.Close, Weight 3, Technical_Analysis.RSI.Value, Weight 1, Options_Data.ATM_Skew, Weight 2")
+      - A reflective assessment of `Last_Strategy_Used_Data`, including whether the past `action` was successful and was it maintained given prior `Rationale`.
+  features_used:
+    - feature: the features used from the prompt's context.
+      direction: LONG, SHORT, or NEUTRAL
+      weight: A Likert score (1 to 3) described in Feature Attribution.

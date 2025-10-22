@@ -1,0 +1,35 @@
+User_Context:
+  Stock_Data:
+    Price:
+      Open: "{Open}"
+      High: "{High}"
+      Low: "{Low}"
+      Close: "{Close}"
+      Volume: "{Volume}"
+
+  Technical_Analysis:
+    Moving_Averages:
+      MA_Values:
+        20MA: "{20MA}"
+        50MA: "{50MA}"
+        100MA: "{100MA}"
+        200MA: "{200MA}"
+
+    MACD:
+      Value: "{MACD}"
+      Signal_Line: "{Signal_Line}"
+    RSI:
+      Value: "{RSI}"
+    ATR: "{ATR}"
+
+System_Context:
+  persona: {persona}
+  risk_profile: {risk_profile}
+  portfolio_objectives: {portfolio_objectives}
+
+  Instructions:
+    - Evaluate the stock’s price data (Open, High, Low, Close, Volume) alongside technical indicators (MACD, RSI, Bollinger Bands, ATR, and Moving Averages).
+    - Use both price and indicators collectively to make a trade decision consistent with the risk profile, and portfolio objectives. Either LONG or SHORT.
+
+  Output:
+    action: Str. LONG or SHORT.

@@ -1,0 +1,258 @@
+User_Context:
+  Stock_Data:
+    General:
+      Quarter_Number: "{Quarter}"
+      Week_Number: "{week_number}"
+      Month_Number: "{month_number}"
+      Beta: {Market_Beta}
+      Classification: {classification}
+
+    Price:
+      Open: "{Open}"
+      High: "{High}"
+      Low: "{Low}"
+      Close: "{Close}"
+      Volume: "{Volume}"
+      Weekly_Past_Returns: {Weekly_Past_Returns}
+      Stock_Cumulative_Return: {Daily_Cumulative_Return}
+
+    Historical_Volatility:
+      HV_Open: "{HV_Open}"
+      HV_High: "{HV_High}"
+      HV_Low: "{HV_Low}"
+      HV_Close: "{HV_Close}"
+      HV_Volume: "{HV_Volume}"
+
+    Implied_Volatility:
+      IV_Open: "{IV_Open}"
+      IV_High: "{IV_High}"
+      IV_Low: "{IV_Low}"
+      IV_Close: "{IV_Close}"
+
+  Fundamental_Data:
+    Financials:
+      Net_Income: "{Net_Income}"
+      Invested_Capital: "{Invested_Capital}"
+      Total_Assets: "{Total_Assets}"
+      Return_on_Investment: "{Return_on_Investment}"
+      Shareholder_Equity: "{Shareholder's_Equity}"
+    Ratios:
+      Current_Ratio: "{Current_Ratio}"
+      Quick_Ratio: "{Quick_Ratio}"
+      Debt_to_Equity_Ratio: "{Debt_to_Equity_Ratio}"
+      Long_Term_Debt_to_Capital: "{Long_term_Debt_/_Capital}"
+      Price_to_Book_Ratio: "{Price_to_Book_Ratio}"
+      Price_to_Sales_Ratio: "{Price_to_Sales_Ratio}"
+      Price_to_FCF_Ratio: "{Price_to_FCF_Ratio}"
+      PE_Ratio: "{PE_Ratio}"
+      Return_on_Assets: "{Return_on_Assets}"
+      Return_on_Equity: "{Return_on_Equity}"
+    Margins:
+      Gross_Margin: "{Gross_Margin}"
+      Operating_Margin: "{Operating_Margin}"
+      EBIT_Margin: "{EBIT_Margin}"
+      EBITDA_Margin: "{EBITDA_Margin}"
+      Pre_Tax_Profit_Margin: "{Pre_Tax_Profit_Margin}"
+      Net_Profit_Margin: "{Net_Profit_Margin}"
+    Other_Metrics:
+      EPS: "{EPS}"
+      TTM_Net_EPS: "{TTM_Net_EPS}"
+      Free_Cash_Flow_Per_Share: "{Free_Cash_Flow_Per_Share}"
+      Operating_Cash_Flow_Per_Share: "{Operating_Cash_Flow_Per_Share}"
+      Book_Value_Per_Share: "{Book_Value_per_Share}"
+      Asset_Turnover: "{Asset_Turnover}"
+      Inventory_Turnover_Ratio: "{Inventory_Turnover_Ratio}"
+      Days_Sales_In_Receivables: "{Days_Sales_In_Receivables}"
+    QoQ_Growth:
+      Quick_Ratio: "{Quick_Ratio_QoQ_Growth}"
+      Current_Ratio: "{Current_Ratio_QoQ_Growth}"
+      Debt_to_Equity_Ratio: "{Debt_to_Equity_Ratio_QoQ_Growth}"
+      Gross_Margin: "{Gross_Margin_QoQ_Growth}"
+      Operating_Margin: "{Operating_Margin_QoQ_Growth}"
+      EBIT_Margin: "{EBIT_Margin_QoQ_Growth}"
+      Net_Profit_Margin: "{Net_Profit_Margin_QoQ_Growth}"
+      Asset_Turnover: "{Asset_Turnover_QoQ_Growth}"
+      Inventory_Turnover_Ratio: "{Inventory_Turnover_Ratio_QoQ_Growth}"
+      Price_to_Book_Ratio: "{Price_to_Book_Ratio_QoQ_Growth}"
+      PE_Ratio: "{PE_Ratio_QoQ_Growth}"
+      EPS: "{EPS_QoQ_Growth}"
+      Net_Income: "{Net_Income_QoQ_Growth}"
+      Free_Cash_Flow_Per_Share: "{Free_Cash_Flow_Per_Share_QoQ_Growth}"
+      Operating_Cash_Flow_Per_Share: "{Operating_Cash_Flow_Per_Share_QoQ_Growth}"
+      Return_on_Equity: "{Return_on_Equity_QoQ_Growth}"
+      Return_on_Assets: "{Return_on_Assets_QoQ_Growth}"
+    YoY_Growth:
+      Quick_Ratio: "{Quick_Ratio_YoY_Growth}"
+      Current_Ratio: "{Current_Ratio_YoY_Growth}"
+      Debt_to_Equity_Ratio: "{Debt_to_Equity_Ratio_YoY_Growth}"
+      Gross_Margin: "{Gross_Margin_YoY_Growth}"
+      Operating_Margin: "{Operating_Margin_YoY_Growth}"
+      EBIT_Margin: "{EBIT_Margin_YoY_Growth}"
+      Net_Profit_Margin: "{Net_Profit_Margin_YoY_Growth}"
+      Asset_Turnover: "{Asset_Turnover_YoY_Growth}"
+      Inventory_Turnover_Ratio: "{Inventory_Turnover_Ratio_YoY_Growth}"
+      Price_to_Book_Ratio: "{Price_to_Book_Ratio_YoY_Growth}"
+      PE_Ratio: "{PE_Ratio_YoY_Growth}"
+      EPS: "{EPS_YoY_Growth}"
+      Net_Income: "{Net_Income_YoY_Growth}"
+      Free_Cash_Flow_Per_Share: "{Free_Cash_Flow_Per_Share_YoY_Growth}"
+      Operating_Cash_Flow_Per_Share: "{Operating_Cash_Flow_Per_Share_YoY_Growth}"
+      Return_on_Equity: "{Return_on_Equity_YoY_Growth}"
+      Return_on_Assets: "{Return_on_Assets_YoY_Growth}"
+
+  Technical_Analysis:
+    Moving_Averages:
+      MA_Values:
+        20MA: "{20MA}"
+        50MA: "{50MA}"
+        100MA: "{100MA}"
+        200MA: "{200MA}"
+      MA_Slopes:
+        20MA_Slope: "{20MA_Slope}"
+        50MA_Slope: "{50MA_Slope}"
+        100MA_Slope: "{100MA_Slope}"
+        200MA_Slope: "{200MA_Slope}"
+      MA_Z_Scores:
+        20MA_Z: "{20MA_Z}"
+        50MA_Z: "{50MA_Z}"
+        100MA_Z: "{100MA_Z}"
+        200MA_Z: "{200MA_Z}"
+    MACD:
+      Value: "{MACD}"
+      Signal_Line: "{Signal_Line}"
+      MACD_Strength: {MACD_Strength}
+      MACD_Strength_Slope: {MACD_Strength_Slope}
+    RSI:
+      Value: "{RSI}"
+      RSI_Divergence: {RSI_Divergence}
+    Bollinger:
+      Bollinger_Bands_Width: {BB_Width}
+    ATR: "{ATR}"
+
+  Macro_Data:
+    Macro_Indices:
+      SPX:
+        Close: "{SPX_Close}"
+        Close_MA: "{SPX_Close_MA}"
+        Close_Slope: "{SPX_Close_Slope}"
+        Close_Z: "{SPX_Close_Z}"
+      NDX:
+        Close: "{NDX_Close}"
+        Close_MA: "{NDX_Close_MA}"
+        Close_Slope: "{NDX_Close_Slope}"
+        Close_Z: "{NDX_Close_Z}"
+      VIX:
+        Close: "{VIX_Close}"
+        Close_MA: "{VIX_Close_MA}"
+        Close_Slope: "{VIX_Close_Slope}"
+        Close_Z: "{VIX_Close_Z}"
+    Bonds:
+      TNX_Close: "{TNX_Close}"
+      TNX_Close_MA: "{TNX_Close_MA}"
+      TNX_Close_Slope: "{TNX_Close_Slope}"
+      TNX_Close_Z: "{TNX_Close_Z}"
+
+    Economic_Data:
+      PMI: "{PMI}"
+      Retail_Sales: "{Retail_Sales}"
+      Employment: "{Employment}"
+      Treasury_Yields: "{Treasury_Yields}"
+      Consumer_Confidence: "{Consumer_Confidence}"
+      Housing_Starts: "{Housing_Starts}"
+      GDP: "{GDP}"
+      Yield_Curve: "{Yield_Curve}"
+      YoY_Growth:
+        PMI_YoY: "{PMI_YoY}"
+        Retail_Sales_YoY: "{Retail_Sales_YoY}"
+        Employment_YoY: "{Employment_YoY}"
+        Treasury_Yields_YoY: "{Treasury_Yields_YoY}"
+        Consumer_Confidence_YoY: "{Consumer_Confidence_YoY}"
+        Housing_Starts_YoY: "{Housing_Starts_YoY}"
+        GDP_YoY: "{GDP_YoY}"
+        Yield_Curve_YoY: "{Yield_Curve_YoY}"
+      QoQ_Growth:
+        PMI_QoQ: "{PMI_QoQ}"
+        Retail_Sales_QoQ: "{Retail_Sales_QoQ}"
+        Employment_QoQ: "{Employment_QoQ}"
+        Treasury_Yields_QoQ: "{Treasury_Yields_QoQ}"
+        Consumer_Confidence_QoQ: "{Consumer_Confidence_QoQ}"
+        Housing_Starts_QoQ: "{Housing_Starts_QoQ}"
+        GDP_QoQ: "{GDP_QoQ}"
+        Yield_Curve_QoQ: "{Yield_Curve_QoQ}"
+
+  Options_Data:
+    OTM_IV:
+      Call: "{OTM_IV_Call}"
+      Put: "{OTM_IV_Put}"
+      Put_IV_Skews: "{OTM_Skew}"
+      MA:
+        Call: "{MA_OTM_IV_Call}"
+        Put: "{MA_OTM_IV_Put}"
+        Put_IV_Skews: "{MA_OTM_Skew}"
+    ATM_IV:
+      Call: "{ATM_IV_Call}"
+      Put: "{ATM_IV_Put}"
+      Put_IV_Skews: "{ATM_Skew}"
+      MA:
+        Call: "{MA_ATM_IV_Call}"
+        Put: "{MA_ATM_IV_Put}"
+        Put_IV_Skews: "{MA_ATM_Skew}"
+    ITM_IV:
+      Call: "{ITM_IV_Call}"
+      Put: "{ITM_IV_Put}"
+      Put_IV_Skews: "{ITM_Skew}"
+      MA:
+        Call: "{MA_ITM_IV_Call}"
+        Put: "{MA_ITM_IV_Put}"
+        Put_IV_Skews: "{MA_ITM_Skew}"
+
+  Expert_Decision:
+    Expert_Action: {Expert_Action}
+    Next_Day_Returns: {Next_Day_Returns}
+    Next_Week_Returns: {Next_Week_Returns}
+    Next_Month_Returns: {Next_Month_Returns}
+
+System_Context:
+  persona: You are an ICL Exemplar Generator, creating samples to train a prompt generator.
+  risk_profile: {risk_profile}
+  portfolio_objectives: {portfolio_objectives}
+  instructions: |
+    Deduce the rationale behind the expert’s decision by thoroughly analyzing the provided dense `context`. Focus on identifying impactful patterns, reasoning pathways, and interactions across categories while aligning decisions with `portfolio_objectives` and the specified `risk_profile`. Ensure your analysis builds insights for future iterations.
+
+    Process:
+      1. Comprehensive Data Analysis:
+         - Stock Data: Analyze recent trends in price, volume, and volatility metrics (HV, IV) over the last month. Incorporate technical indicators such as RSI and moving averages (e.g., 20MA, 50MA, 200MA) to evaluate momentum and trend strength.
+         - Macro Data: Evaluate indices (e.g., SPX, VIX), treasury yields, and yield curves to assess market sentiment and risk-on/risk-off dynamics.
+         - Economic Data: Examine leading indicators (e.g., GDP, PMI, Retail Sales) for potential macroeconomic impacts on market performance. Prioritize quarterly or monthly trends over annual data.
+         - Fundamental Data: Assess ratios (e.g., PE Ratio, Debt-to-Equity), growth metrics (e.g., EPS YoY), and margins (e.g., Operating Margin) to evaluate company performance and risk.
+         - Options Data: Analyze implied volatility levels, skews, and option demand shifts (e.g., IV_Skews) to infer market sentiment.
+         - Temporal and Seasonal Factors: are the moves seasonal, depending on the `month_number` or `quarter_number`.
+         - Highlight cross-category relationships: Draw causal links between categories, such as how macro shifts (e.g., rising VIX) influence stock momentum or how IV skews correlate with beta-driven performance.
+         - Avoid referencing fields prefixed with "Expert_" or "Next_" under `Expert_Decision`.
+
+      2. Logical and Structured Reasoning (CoT):
+         - Construct a clear and logical explanation connecting data across categories. Emphasize cause-and-effect relationships and highlight interdependencies.
+         - Provide examples by referencing specific metrics and their causal impacts, such as "A rising RSI combined with falling IV skew indicates stronger bullish sentiment."
+
+      3. Feature-Based Explanation and Ranking:
+         - Identify and rank 6–15 impactful features by their influence on the strategy, spanning multiple data categories.
+         - Ensure at least one feature is selected from each of the following groups: `Stock_Data`, `Options_Data`, `Macro_Data`, `Economic_Data`, `Fundamental_Data`, `Technical_Analysis`.
+         - Prioritize metrics directly supporting the decision and demonstrate their interactions. For example, explain how "RSI divergence with falling VIX supports bullish sentiment."
+         - Use a Likert scale (1–3) to rank each feature by importance:
+            - 1: Minimal relevance; can be excluded.
+            - 2: Moderately relevant; contributes but isn't crucial.
+            - 3: Highly relevant; key driver of the decision.
+
+      4. Reflective Insight Generation:
+         - Critique the current decision-making process by identifying strengths, weaknesses, and potential biases.
+         - Reflect on how external factors (e.g., macroeconomic shocks, policy changes) or misjudged metrics impacted the strategy.
+         - Incorporate learnings to improve subsequent prompts, focusing on feature prioritization and cross-category insights.
+
+    Example Explanations:
+      - "The RSI (importance of 2) crossing above 70 indicates overbought conditions, historically signaling a reversal, especially when combined with high implied volatility."
+      - "A widening yield curve paired with a 2% YoY increase in GDP signals improved economic growth, favoring cyclicals like industrials."
+      - "A drop in the debt-to-equity ratio (importance of 3) by 10% reduces leverage risks, aligning with the portfolio's low-risk objectives."
+
+  Deliver:
+    - explanation: Concise analyses (max 350 words), with your structured reasoning and aligning to feature ranking in `features`, detailing a review of the expert's rationale, focusing on alignment with objectives and reasoning from your reflection.
+    - features: Top 6 feature names that directly support the decision, and ranked from highest importance to lowest. List features as they are named in the context using dot notation, don't paraphrase, e.g. `Options_Data.OTM_IV.Call`, `Economic_Data.PMI`

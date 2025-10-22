@@ -1,0 +1,153 @@
+User_Context:
+  Last_Strategy_Used_Data:
+    last_returns: "{Last_LLM_Strat_Returns}"
+    last_action: "{Last_LLM_Strat_Action}"
+
+  Stock_Data:
+    General:
+      Beta: {Market_Beta}
+
+    Last_Weeks_Price:
+      Close: "{Close}"
+      Volume: "{Volume}"
+
+    Weekly_Past_Returns: "{Weekly_Past_Returns}"
+
+    Historical_Volatility:
+      HV_Close: "{HV_Close}"
+
+    Implied_Volatility:
+      IV_Close: "{IV_Close}"
+
+  Fundamental_Data:
+    Ratios:
+      Current_Ratio: "{Current_Ratio}"
+      Quick_Ratio: "{Quick_Ratio}"
+      PE_Ratio: "{PE_Ratio}"
+
+    Margins:
+      Gross_Margin: "{Gross_Margin}"
+      Operating_Margin: "{Operating_Margin}"
+      Net_Profit_Margin: "{Net_Profit_Margin}"
+
+    Growth Metrics:
+      EPS_YoY: "{EPS_YoY_Growth}"
+      Net_Income_YoY: "{Net_Income_YoY_Growth}"
+      Free_Cash_Flow_YoY: "{Free_Cash_Flow_Per_Share_YoY_Growth}"
+
+  Technical_Analysis:
+    Moving_Averages:
+      20MA: "{20MA}"
+      50MA: "{50MA}"
+      200MA: "{200MA}"
+    MA_Slopes:
+        20MA_Slope: "{20MA_Slope}"
+        50MA_Slope: "{50MA_Slope}"
+        100MA_Slope: "{100MA_Slope}"
+        200MA_Slope: "{200MA_Slope}"
+
+    RSI:
+      Value: "{RSI}"
+
+  Macro_Data:
+    Macro_Indices:
+      SPX:
+        Close: "{SPX_Close}"
+        Close_20MA: "{SPX_Close_MA}"
+        Close_Slope: "{SPX_Close_Slope}"
+
+      VIX:
+        Close: "{VIX_Close}"
+        Close_20MA: "{VIX_Close_MA}"
+        Close_Slope: "{VIX_Close_Slope}"
+
+    Economic_Data:
+      GDP_QoQ: "{GDP_QoQ}"
+      PMI: "{PMI}"
+      Consumer_Confidence_QoQ: "{Consumer_Confidence_QoQ}"
+      M2_Money_Supply_QoQ: "{M2_Money_Supply_QoQ}"
+      PPI_YoY: "{PPI_YoY}"
+      Treasury_Yields_YoY: "{Treasury_Yields_YoY}"
+
+  Options_Data:
+    Put_IV_Skews:
+      OTM_Skew: "{OTM_Skew}"
+      ATM_Skew: "{ATM_Skew}"
+      ITM_Skew: "{ITM_Skew}"
+
+    20Day_Moving_Averages:
+      OTM_Skew_MA: "{MA_OTM_Skew}"
+      ATM_Skew_MA: "{MA_ATM_Skew}"
+      ITM_Skew_MA: "{MA_ITM_Skew}"
+
+  News_Sentiment: {news_sentiment}
+  News_Impact_Score: {news_impact_score}
+
+System_Context(System):
+  Instructions: |
+    Develop a LONG or SHORT trading strategy for a single stock for the upcoming `month`. The strategy must be based on multi-domain convergence and full use of the provided data. Do not skip any domain or field. Follow these guidelines:
+
+    1. Strategic Horizon and Flip Prevention:
+      - This is a one-month position. Do not reverse last month's strategy (e.g. from LONG to SHORT) unless there is strong alignment across multiple domains (at least 3).
+      - One-week returns or short-term RSI shifts are not sufficient to flip the strategy.
+      - If the last strategy underperformed but the trend and context are still intact, retain the direction with reduced confidence.
+      - Prior strategy outcome is in `Last_Strategy_Used_Data`.
+
+    2. Stock Price Action:
+      - Use all 4 `Weekly_Past_Returns` to assess trend consistency. If 2 or more are negative, trend is weak.
+      - Compare `Close` to `20MA`, `50MA`, and `200MA`. Above all 3 with rising slopes = strong LONG setup.
+      - Include slopes: `20MA_Slope`, `50MA_Slope`, `100MA_Slope`, `200MA_Slope` to confirm momentum.
+      - `RSI`: Overbought (>70) or Oversold (<30) is secondary. Use only with trend confirmation.
+
+    3. Volatility and Market Expectation:
+      - Compare `HV_Close` (realized) and `IV_Close` (expected):
+        - HV < IV: Market expects a move.
+        - HV > IV: Mean reversion likely.
+        - Rising HV and IV: Potential breakout.
+        - Both flat: Continuation likely.
+      - Always use both values in reasoning.
+
+    4. Fundamentals:
+      - Use `EPS_YoY`, `Net_Income_YoY`, `Free_Cash_Flow_YoY`, `Gross_Margin`, `Operating_Margin`, `Net_Profit_Margin`.
+      - Check `Current_Ratio`, `Quick_Ratio`, `PE_Ratio` for quality and valuation.
+      - Strong growth and low debt support LONG.
+      - Poor margins, weak liquidity, or high PE with no growth weakens LONG.
+
+    5. Macro and Regime Context:
+      - Use `SPX_Close_Slope` and `VIX_Close_Slope` to infer market risk sentiment:
+        - SPX ↑ and VIX ↓: Risk-on → supports LONG.
+        - SPX ↓ and VIX ↑: Risk-off → supports SHORT.
+        - Otherwise NEUTRAL.
+      - Use `GDP_QoQ`, `PMI`, `M2_Money_Supply_QoQ`, `Treasury_Yields_YoY` to identify macro regime:
+        - Expansion: GDP > 0 and PMI > 50
+        - Inflationary: M2 > 2% and PMI > 50
+        - Contraction: GDP < 0 and PMI < 50
+        - Deflationary: M2 < 0 and PMI < 50
+        - Yield YoY < 0 → recession risk
+
+    6. Options Sentiment:
+      - Compare `ATM_Skew`, `ITM_Skew`, `OTM_Skew` to their 20-day moving averages.
+      - If skew is above average: directional positioning (calls or puts).
+      - If skew is flat or below average: neutral sentiment.
+      - Combine with HV and IV to assess conviction.
+
+    7. News Sentiment:
+      - Use `News_Sentiment` and `News_Impact_Score` (1–3).
+      - Only strong directional news (score = 3) should override other signals.
+      - Medium news (score = 2) supports but does not lead.
+      - Always check if news contradicts macro or technical trend.
+
+    8. Decision Logic:
+      - Use all domains: Technical, Macro, Options, News, Fundamentals.
+      - For each domain, assign a directional vote: LONG, SHORT, or NEUTRAL.
+      - Provide top 5 contributing features using Likert scale (1 = low, 3 = high influence).
+      - Sum all directional feature weights for each side and report totals.
+
+    9. Explanation:
+      - Explanation must compare actual values (e.g. “Close = 98.57 above 50MA = 95.86”).
+      - Check for logical inconsistencies. If present, redo the strategy.
+      - Limit explanation to 150 words.
+      - Return a confidence score (Likert scale 1 to 3):
+        - 1 = weak/conflicting signals
+        - 2 = moderate alignment
+        - 3 = strong multi-domain convergence

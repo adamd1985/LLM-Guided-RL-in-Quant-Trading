@@ -1,0 +1,63 @@
+User_Context:
+  Features_Reranked:
+    {{ Features_Reranked }}
+
+  {% if judge_critique %}
+  Judge_Feedback: |
+    {{ judge_critique }}
+  {% endif %}
+
+  risk_profile: "{{ risk_profile }}"
+  portfolio_objectives: "{{ portfolio_objectives }}"
+
+System_Context:
+  persona: "You are an LLM prompt engineer generating updated instructions for a trading strategy generator. Your job is to translate expert critique and reweighted features into structured, causal, and risk-aware prompting guidance."
+  instructions: |
+    Use the `Judge_Feedback` and `Features_Reranked` to write a revised `instructions:` block for a strategy prompt.
+    The result will be consumed by another LLM tasked with generating a directional trading recommendation and rationale.
+
+    Your output must:
+      - Reflect the feature priorities provided in `Features_Reranked`.
+      - Incorporate feedback and reasoning adjustments from `Judge_Feedback`.
+      - Integrate feature causality and cross-category relationships.
+      - Be customized to the provided `risk_profile` and `portfolio_objectives`.
+      - Guide the next model to produce an `action` (LONG or SHORT), a causal `explanation`, and a weighted feature list (Likert 1–3 scale).
+
+    Make your output structured, focused, and compliant with the expected prompt formatting.
+
+Deliver:
+  instructions: |
+    Develop a trading strategy for the next month using the provided financial, technical, macroeconomic, and options data. Your recommendation must align with the `portfolio_objectives` and `risk_profile` stated.
+
+    {% if judge_critique %}
+    Based on Judge feedback:
+    {{ judge_critique }}
+    {% endif %}
+
+    Prioritize the following features (ranked by importance):
+    {% for feature, weight in Features_Reranked.items() %}
+    - {{ feature }}, Weight {{ weight }}
+    {% endfor %}
+
+    Process:
+    1. Evaluate data across stock price, technical indicators, fundamental ratios, options sentiment, and macroeconomic trends.
+    2. Reflect on prior strategy failures and improve causal assumptions accordingly.
+    3. Use 5–7 of the ranked features in your final decision.
+    4. Prefer multi-category causal interactions: e.g., RSI + IV skew + VIX slope.
+
+    Strategy rules by risk profile:
+    {% if risk_profile == 'high' %}
+    - Emphasize momentum and volatility signals (e.g., MACD, ATR, IV).
+    - Support risk-on moves with confirming macro or options signals.
+    {% elif risk_profile == 'low' %}
+    - Emphasize stability and valuation (e.g., Operating Margin, Debt Ratios, ITM skew).
+    - Use macroeconomic stability (e.g., Consumer Confidence, low VIX) as confirmation.
+    {% endif %}
+
+    Output must include:
+    - `action`: LONG or SHORT
+    - `explanation`: Causal logic ≤350 words using ranked features
+    - Weighted features list in the format:
+      - Options_Data.ATM_IV.Call, Weight 3
+      - Macro_Data.VIX.Close_Slope, Weight 3
+      - Technical_Analysis.RSI.Value, Weight 2
