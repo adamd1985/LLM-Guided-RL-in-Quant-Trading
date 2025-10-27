@@ -5,12 +5,13 @@ llm_data/
 rl_data/
 spottest/
 spot_test/
+data/prompts/figures/
+data/prompts/response/
+data/prompts/results/
 
 
 # Ignore all data artifacts except prompts
 data/*
-!data/prompts/
-!data/prompts/**
 
 runs
 models/*.h5

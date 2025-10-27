@@ -7,7 +7,6 @@ import math
 import pickle  # noqa: S403  # nosec: trusted internal artefacts
 import re
 from collections.abc import Mapping, Sequence
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from enum import Enum
 from itertools import chain
 from pathlib import Path
@@ -17,6 +16,7 @@ import backoff
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_object_dtype
 import polars as pl
 import statsmodels.api as sm
 import yaml
@@ -26,11 +26,11 @@ try:
     import html2text
 except ImportError:  # pragma: no cover - dependency is optional for tests
     html2text = None  # type: ignore[assignment]
-
+from tqdm.auto import tqdm
 try:
-    from tqdm.notebook import tqdm
-except ImportError:
-    from tqdm import tqdm
+    pd.set_option("future.no_silent_downcasting", True)
+except KeyError:
+    pass
 
 try:
     from rl_agent_utils import PerformanceEstimator
@@ -759,8 +759,20 @@ def update_historical_data_context(
     expert_df: DataFrame | None = None,
     classification: str = "High-Growth Tech Stock",
     news_factors: Sequence[str] | None = None,
+    news_sentiment: float | None = None,
+    news_impact_score: float | None = None,
 ) -> dict[str, Any]:
-    """Populate trading prompt placeholders from engineered context data."""
+    """Populate trading prompt placeholders from engineered context data.
+
+    Parameters
+    ----------
+    news_sentiment:
+        Aggregated sentiment score for the latest news context. Defaults to ``0``
+        when no sentiment is available.
+    news_impact_score:
+        Likert-style impact score summarising the expected market influence of the
+        news factors. Defaults to ``0`` when unavailable.
+    """
 
     Last_LLM_Strat = clean_strategy_text(Last_LLM_Strat)
 
@@ -791,6 +803,8 @@ def update_historical_data_context(
         "Last_LLM_Strat_Best_Returns": Peak_Returns,
         "Last_LLM_Strat_Worse_Returns": Trough_Returns,
         "news_factors": list(news_factors) if news_factors else None,
+        "news_sentiment": news_sentiment if news_sentiment is not None else 0,
+        "news_impact_score": news_impact_score if news_impact_score is not None else 0,
     }
 
     # Add features from the specified list
@@ -1497,6 +1511,19 @@ def feature_engineer_llm_signals(
     conf = confidence / MAX_CONFIDENCE
     llm_signal = (conf * certainty) ** 0.5
 
+    object_columns = (
+        "strategy",
+        "explanation",
+        "tokens_meta_strat",
+        "news_factors",
+        "tokens_meta_news",
+    )
+    for column in object_columns:
+        if column not in filtered_ticker_df.columns:
+            filtered_ticker_df[column] = pd.Series(index=filtered_ticker_df.index, dtype="object")
+        elif not is_object_dtype(filtered_ticker_df[column].dtype):
+            filtered_ticker_df[column] = filtered_ticker_df[column].astype("object")
+
     filtered_ticker_df.loc[index, "strategy"] = strategy_file_name
     filtered_ticker_df.loc[index, "trade_action"] = int(is_llm_long)
     filtered_ticker_df.loc[index, "action_confidence"] = confidence
@@ -1511,7 +1538,7 @@ def feature_engineer_llm_signals(
     filtered_ticker_df.loc[index, "entropy"] = entropy
     filtered_ticker_df.loc[index, "long_token_proba"] = trade_strategy["long_token_proba"]
     filtered_ticker_df.loc[index, "short_token_proba"] = trade_strategy["short_token_proba"]
-    filtered_ticker_df.loc[index, "tokens_meta_strat"] = pd.Series([trade_strategy["tokens_meta"]] * len(index), index=index)
+    filtered_ticker_df.loc[index, "tokens_meta_strat"] = [trade_strategy["tokens_meta"]] * len(index)
     filtered_ticker_df.loc[index, "cummulative_returns"] = strat_history["cummulative_returns"]
     filtered_ticker_df.loc[index, "last_returns"] = strat_history["last_returns"]
     max_days = strat_history["elapsed_days"] if strat_history["elapsed_days"] is not None else 0
@@ -1522,10 +1549,18 @@ def feature_engineer_llm_signals(
     elif len(arr) < len(sub_index):
         pad = np.full(len(sub_index) - len(arr), max_days)
         arr = np.concatenate([arr, pad])
-    filtered_ticker_df.loc[sub_index, "elapsed_days"] = pd.Series(arr, index=sub_index)
+    filtered_ticker_df.loc[sub_index, "elapsed_days"] = arr
     if news_results is not None:
-        filtered_ticker_df.loc[index, "news_factors"] = pd.Series([news_results["response"]] * len(index), index=index)
-        filtered_ticker_df.loc[index, "tokens_meta_news"] = pd.Series([news_results["tokens_meta"]] * len(index), index=index)
+        news_response = news_results.get("response")
+        if isinstance(news_response, Sequence) and not isinstance(news_response, (str, bytes)):
+            news_payload = list(news_response)
+        else:
+            news_payload = news_response
+
+        tokens_meta = news_results.get("tokens_meta")
+        for idx in index:
+            filtered_ticker_df.at[idx, "news_factors"] = news_payload
+            filtered_ticker_df.at[idx, "tokens_meta_news"] = tokens_meta
 
     return filtered_ticker_df
 
@@ -1546,6 +1581,7 @@ def generate_strategy_for_ticker(
     classification: str = CLASSIFICATION,
     time_horizon: Literal["monthly", "weekly"] = "monthly",
     max_news: int = 5,
+    show_progress: bool = True,
 ) -> DataFrame:
     """Iterate over the price history to generate LLM strategies per evaluation window."""
 
@@ -1570,12 +1606,16 @@ def generate_strategy_for_ticker(
     best_rets = 0
     worse_rets = 0
 
-    for date, day_data in tqdm(
-        filtered_ticker_df.iterrows(),
-        total=len(filtered_ticker_df),
-        desc=f"Generating strategies for {ticker}",
-        leave=False,
-    ):
+    date_iterator = filtered_ticker_df.iterrows()
+    if show_progress:
+        date_iterator = tqdm(
+            date_iterator,
+            total=len(filtered_ticker_df),
+            desc=f"Generating strategies for {ticker}",
+            leave=False,
+        )
+
+    for date, day_data in date_iterator:
         time_condition = get_date_condition(date)
         if time_condition != current_time_condition:
             current_time_condition = time_condition
@@ -1627,6 +1667,36 @@ def generate_strategy_for_ticker(
                         LLM_OUTPUT_PATH=str(ticker_output_path),
                     )
 
+            news_factors_payload: Sequence[str] | None = None
+            news_sentiment_value: float | None = None
+            news_impact_value: float | None = None
+            if news_results:
+                raw_response = news_results.get("response")
+                if isinstance(raw_response, Sequence) and not isinstance(raw_response, (str, bytes)):
+                    if raw_response and isinstance(raw_response[0], Mapping):
+                        news_factors_payload = [str(item.get("factor") or item) for item in raw_response if isinstance(item, Mapping)]
+                        sentiments = [
+                            item.get("sentiment")
+                            for item in raw_response
+                            if isinstance(item, Mapping) and item.get("sentiment") is not None
+                        ]
+                        impacts = [
+                            item.get("market_impact")
+                            for item in raw_response
+                            if isinstance(item, Mapping) and item.get("market_impact") is not None
+                        ]
+                        if sentiments:
+                            news_sentiment_value = float(np.mean(sentiments))
+                        if impacts:
+                            news_impact_value = float(np.mean(impacts))
+                    else:
+                        news_factors_payload = [str(item) for item in raw_response]
+                elif raw_response is not None:
+                    news_factors_payload = [str(raw_response)]
+
+                news_sentiment_value = news_results.get("news_sentiment", news_sentiment_value)
+                news_impact_value = news_results.get("news_impact_score", news_impact_value)
+
             strat_history = {
                 "last_strategy": previous_strategy["explanation"] if previous_strategy else None,
                 "last_action": previous_strategy["action"] if previous_strategy else None,
@@ -1652,7 +1722,9 @@ def generate_strategy_for_ticker(
                 Last_LLM_Strat_Days=strat_history["elapsed_days"],
                 Peak_Returns=strat_history["best_returns"],
                 Trough_Returns=strat_history["worst_returns"],
-                news_factors=news_results["response"] if news_results else None,
+                news_factors=news_factors_payload,
+                news_sentiment=news_sentiment_value,
+                news_impact_score=news_impact_value,
             )
 
             strategy_file_name = f"{date.strftime('%Y-%m%d')}-{ticker}-1.yml"
@@ -1690,156 +1762,7 @@ def generate_strategy_for_ticker(
 
     return filtered_ticker_df
 
-
-def generate_strategy_for_ticker_async(
-    ticker_df: DataFrame,
-    ticker: str,
-    LLM_OUTPUT_PATH: Path | str,
-    persona: str,
-    HIGH_RISK_PROFILE: str,
-    HIGH_OBJECTIVES: str,
-    client: Any,
-    model: str,
-    news_yaml_file: Path | str | None = None,
-    strategy_yaml_file: Path | str | None = None,
-    start_date: pd.Timestamp | str | None = None,
-    end_date: pd.Timestamp | str | None = None,
-    classification: str = CLASSIFICATION,
-    time_horizon: Literal["monthly", "weekly"] = "monthly",
-    max_news: int = 0,
-    max_workers: int = 8,
-) -> DataFrame:
-    """Parallelised strategy generation across time buckets."""
-
-    def get_date_range_key(date: pd.Timestamp) -> pd.Timestamp:
-        if time_horizon == "monthly":
-            return pd.Timestamp(f"{date.year}-{date.month}-01", tz="UTC")
-        return pd.Timestamp(date.to_period("W").start_time, tz="UTC")
-
-    output_root = Path(LLM_OUTPUT_PATH).expanduser().resolve()
-    ticker_output_path = output_root / ticker
-    ticker_output_path.mkdir(parents=True, exist_ok=True)
-    output_file = ticker_output_path / f"{ticker}_aug.csv"
-
-    ticker_df = ticker_df.copy().sort_index()
-    columns_to_fill = list(
-        dict.fromkeys(
-            [
-                "utility_score",
-                "evaluation_iteration",
-                "evaluation_score",
-                "strategy",
-                "strategy_probas",
-                "trade_action",
-                "explanation",
-                "long_conf_score",
-                "short_conf_score",
-                "long_token_proba",
-                "short_token_proba",
-                "perplexity",
-                "news_factors",
-                "tokens_meta_strat",
-                "tokens_meta_news",
-                "tokens_meta_proba",
-                "entropy",
-            ]
-        )
-    )
-    ticker_df[columns_to_fill] = np.nan
-    ticker_df["acceptance_rate"] = 1.0
-    start_date_ts = pd.to_datetime(start_date, utc=True)
-    end_date_ts = pd.to_datetime(end_date, utc=True)
-    filtered_df = ticker_df[(ticker_df.index >= start_date_ts) & (ticker_df.index <= end_date_ts)].copy()
-
-    date_blocks: dict[pd.Timestamp, list[pd.Timestamp]] = {}
-    for date in filtered_df.index:
-        block_key = get_date_range_key(date)
-        date_blocks.setdefault(block_key, []).append(date)
-
-    sorted_blocks = sorted(date_blocks.items())
-
-    tasks: list[tuple[DataFrame, pd.Timestamp]] = []
-    for i in range(1, len(sorted_blocks)):
-        _, prev_dates = sorted_blocks[i - 1]
-        _, curr_dates = sorted_blocks[i]
-        prev_context_df = filtered_df.loc[prev_dates].copy()
-        target_date = curr_dates[0]
-        tasks.append((prev_context_df, target_date))
-
-    def process_timestep(prev_context_df: DataFrame, target_date: pd.Timestamp) -> dict[str, Any] | None:
-        try:
-            news_results = None
-            if news_yaml_file and max_news > 0:
-                last_n_news = list(
-                    dict.fromkeys(
-                        f
-                        for f in chain.from_iterable(filtered_df.loc[target_date:].iloc[:20]["content"].dropna().tolist())
-                        if f and f.strip()
-                    )
-                )
-                if last_n_news:
-                    news_results = call_openai_to_extract_news(
-                        articles=last_n_news[-max_news:],
-                        news_yml_file=news_yaml_file,
-                        ticker=ticker,
-                        target_name=TICKER_COMPANY_NAME_MAP[ticker],
-                        date=f"{target_date.year}-{target_date.strftime('%m')}",
-                        client=client,
-                        model=model,
-                        LLM_OUTPUT_PATH=str(ticker_output_path),
-                    )
-            context = update_historical_data_context(
-                engineered_df=prev_context_df,
-                persona=persona,
-                HIGH_RISK_PROFILE=HIGH_RISK_PROFILE,
-                HIGH_OBJECTIVES=HIGH_OBJECTIVES,
-                classification=classification,
-                news_factors=news_results["response"] if news_results is not None and len(news_results["response"]) > 0 else None,
-            )
-
-            eval_iteration = 1
-            strat_file = f"{target_date.strftime('%Y-%m%d')}-{ticker}-{eval_iteration}.yml"
-            prompt_file = f"{target_date.strftime('%Y-%m%d')}-{ticker}-{eval_iteration}_prompt.yml"
-            strategy = call_openai_for_strategy(
-                context=context,
-                prompt_file_name=prompt_file,
-                strategy_file_name=strat_file,
-                LLM_OUTPUT_PATH=str(ticker_output_path),
-                client=client,
-                model=model,
-                yaml_file=strategy_yaml_file,
-            )
-            return {"date": target_date, "strategy": strategy}
-
-        except Exception:
-            logger.exception("%s strategy generation failed for %s", ticker, target_date)
-            return None
-
-    results = []
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = [executor.submit(process_timestep, ctx, dt) for ctx, dt in tasks]
-        for future in tqdm(as_completed(futures), total=len(futures), desc=f"Processing {ticker}"):
-            result = future.result()
-            if result:
-                results.append(result)
-    for result in tqdm(sorted(results, key=lambda x: x["date"]), desc=f"Aggregating {ticker} Strategies"):
-        date = result["date"]
-        strategy = result["strategy"]
-        filtered_df.loc[date:, "strategy"] = f"{date.strftime('%Y-%m%d')}-{ticker}.yml"
-        filtered_df.loc[date:, "trade_action"] = int(strategy["action"] == Action.LONG)
-        filtered_df.loc[date:, "explanation"] = strategy["explanation"]
-        filtered_df.loc[date:, "perplexity"] = strategy["perplexity"]
-        filtered_df.loc[date:, "entropy"] = strategy["entropy"]
-        filtered_df.loc[date:, "tokens_meta_strat"] = pd.Series(
-            [strategy["tokens_meta"]] * len(filtered_df.loc[date:]), index=filtered_df.loc[date:].index
-        )
-        filtered_df.loc[date:, "long_token_proba"] = strategy["long_token_proba"]
-        filtered_df.loc[date:, "short_token_proba"] = strategy["short_token_proba"]
-    filtered_df.to_csv(output_file, quoting=csv.QUOTE_MINIMAL, escapechar="\\")
-    return filtered_df
-
-
-def generate_random_sample_dates(dataframe: DataFrame, num_samples: int = 15) -> pd.DatetimeIndex:
+def generate_random_sample_dates(dataframe: DataFrame, num_samples: int = 252) -> pd.DatetimeIndex:
     """Sample unique timestamps from a DataFrame index for inspection."""
 
     if num_samples <= 0:
@@ -1874,10 +1797,11 @@ def evaluate_trading_metrics(
         df_metrics = analyser.getComputedPerformance()
         metrics: dict[str, float | None] = dict(zip(df_metrics["Metric"], df_metrics["Value"], strict=False))
     else:
+        trades_df = trades_df.copy()
         trades_df["Position"] = trades_df["trade_action"].apply(lambda value: 1 if value == 1 else -1)
         trades_df["Lagged_Position"] = trades_df["Position"].shift(1)
         trades_df["returns"] = trades_df["Lagged_Position"] * trades_df["Close"].pct_change()
-        trades_df["returns"].fillna(0, inplace=True)
+        trades_df["returns"] = trades_df["returns"].fillna(0)
 
         excess_daily_returns = trades_df["returns"] - (risk_free_rate / trading_days)
         sharpe_ratio = (
@@ -1963,7 +1887,10 @@ def evaluate_trading_metrics(
         trades_df["Total_Costs"] = total_costs
         trades_df["mean_normalized_entropy"] = norm_entropy
         trades_df["max_normalized_entropy"] = max_norm_entropy
-        trades_df["month"] = trades_df.index.to_period("M")
+        month_index = trades_df.index
+        if getattr(month_index, "tz", None) is not None:
+            month_index = month_index.tz_convert("UTC").tz_localize(None)
+        trades_df["month"] = month_index.to_period("M")
 
     metrics.update(
         {
@@ -2488,5 +2415,3 @@ def process_news_with_llm(
         )
 
     return results
-
-
